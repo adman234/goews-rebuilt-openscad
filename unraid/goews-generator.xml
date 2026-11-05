@@ -13,7 +13,7 @@
   <Category>Tools:</Category>
   <WebUI>http://[IP]:[PORT:8000]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/adman234/goews-rebuilt-openscad/docker-local/unraid/goews-generator.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/adman234/goews-rebuilt-openscad/docker-local/frontend/public/favicon.svg</Icon>
+  <Icon>https://raw.githubusercontent.com/adman234/goews-rebuilt-openscad/docker-local/unraid/icon.png</Icon>
   <ExtraParams/>
   <PostArgs/>
   <CPUset/>
