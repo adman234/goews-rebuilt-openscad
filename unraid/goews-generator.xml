@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>goews-generator</Name>
+  <Repository>ghcr.io/adman234/goews-rebuilt-openscad:latest</Repository>
+  <Registry>https://github.com/adman234/goews-rebuilt-openscad/pkgs/container/goews-rebuilt-openscad</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/adman234/goews-rebuilt-openscad/tree/docker-local</Support>
+  <Project>https://github.com/jimfunk/goews-rebuilt-openscad</Project>
+  <Overview>Self-hosted GOEWS part generator (web UI for the goews-rebuilt-openscad models). Generates tiles, tile stacks, shelves, bins, hooks and more as STL. The tile stack download also includes a 3MF with PLA and PETG preassigned, and optionally a STEP file of the PETG separators. Large stacks take a minute or two to generate.</Overview>
+  <Category>Tools:</Category>
+  <WebUI>http://[IP]:[PORT:8000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/adman234/goews-rebuilt-openscad/docker-local/unraid/goews-generator.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/adman234/goews-rebuilt-openscad/docker-local/frontend/public/favicon.svg</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="Web UI port" Target="8000" Default="8000" Mode="tcp" Description="Port the web interface is served on. Change the host port if 8000 is already in use on your server." Type="Port" Display="always" Required="true" Mask="false">8000</Config>
+  <Config Name="Response timeout (seconds)" Target="SANIC_RESPONSE_TIMEOUT" Default="1800" Mode="" Description="How long a single generation may take before it is cut off. Large stacks with STEP export can take a few minutes." Type="Variable" Display="advanced" Required="false" Mask="false">1800</Config>
+</Container>

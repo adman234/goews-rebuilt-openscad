@@ -1,0 +1,50 @@
+# Build the Docker image and publish it to GitHub Container Registry, so it
+# can be installed on Unraid (or anywhere else) without building locally:
+#
+#   ghcr.io/<owner>/goews-rebuilt-openscad:latest
+#
+# Runs on every push to the docker-local branch, and on demand from the
+# Actions tab ("Run workflow").
+name: Docker image
+
+on:
+  push:
+    branches: [docker-local]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # Registry image names must be lowercase.
+          images: ghcr.io/${{ github.repository_owner }}/goews-rebuilt-openscad
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

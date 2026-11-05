@@ -162,6 +162,21 @@ To update after pulling new changes:
 docker compose up -d --build
 ```
 
+### Running it on Unraid
+
+A GitHub Actions workflow publishes the image to
+`ghcr.io/adman234/goews-rebuilt-openscad:latest` on every push to the
+`docker-local` branch. To install it, download the template on the Unraid server
+(terminal or SSH):
+
+```bash
+wget -O /boot/config/plugins/dockerMan/templates-user/my-goews-generator.xml https://raw.githubusercontent.com/adman234/goews-rebuilt-openscad/docker-local/unraid/goews-generator.xml
+```
+
+Then in the Unraid web UI go to **Docker → Add Container**, pick
+**goews-generator** from the **Template** list, and click **Apply**. The web UI is
+on port 8000 by default.
+
 There is Systemd unit definition in `systemd/goews.service`. It assumes the location of
 this repo is checked out at `/srv/goews-rebuilt-openscad` and a user `goews` exists.
 For security reasons, it is highly recommended that nothing under the checkout is
