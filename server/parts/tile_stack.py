@@ -1,7 +1,10 @@
 import asyncio
 import io
+import logging
+import re
 import zipfile
 from enum import StrEnum
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
@@ -10,7 +13,21 @@ from sanic.request import Request
 from sanic_ext import openapi, validate
 from server.api import api_bp
 from server.enums import Variant
-from server.openscad import build
+from server.openscad import build, top_dir
+from server.step import build_separator_step, step_available
+from server.threemf import Part, build_3mf
+
+logger = logging.getLogger("tile_stack")
+
+
+def _read_tile_thickness() -> float:
+    """Tile thickness from constants.scad, so separator placement stays in sync."""
+    text = (Path(top_dir) / "constants.scad").read_text()
+    match = re.search(r"^\s*tile_thickness\s*=\s*([\d.]+)\s*;", text, re.M)
+    return float(match.group(1)) if match else 6.0
+
+
+TILE_THICKNESS = _read_tile_thickness()
 
 
 @openapi.component
@@ -64,6 +81,16 @@ class TileStackDefinition(BaseModel):
     skip_list: Annotated[list[list[int]], Field(description="Tiles to exclude")] = []
 
     variant: Variant = Variant.ORIGINAL
+
+    include_step: Annotated[
+        bool,
+        Field(
+            description=(
+                "Add a STEP file of the PETG separators to the ZIP download. "
+                "This makes the download noticeably slower and larger."
+            )
+        ),
+    ] = False
 
     @field_validator("skip_list", mode="after")
     @classmethod
@@ -165,12 +192,49 @@ async def tile_stack_bundle(request: Request, body: TileStackDefinition):
         **tile_stack_build_params(body, StackPart.PETG),
     )
 
-    pla_stl, petg_stl = await asyncio.gather(pla_task, petg_task)
+    # 2D outline of one separator, used to build the STEP file.
+    outline_task = build(
+        "tile_stack.scad",
+        export_format="svg",
+        **{**tile_stack_build_params(body, StackPart.PETG), "part": "petg_outline"},
+    )
+
+    pla_stl, petg_stl, outline_svg = await asyncio.gather(
+        pla_task, petg_task, outline_task
+    )
+
+    threemf = await asyncio.to_thread(
+        build_3mf,
+        basename,
+        [
+            Part("PLA tiles", pla_stl, extruder=1),
+            Part("PETG separators", petg_stl, extruder=2),
+        ],
+    )
+
+    step = None
+    if body.include_step and not step_available():
+        logger.warning("STEP requested but cadquery-ocp is not installed")
+    elif body.include_step:
+        try:
+            step = await asyncio.to_thread(
+                build_separator_step,
+                outline_svg.decode(),
+                thickness=body.spacer_h,
+                first_z=TILE_THICKNESS,
+                pitch=TILE_THICKNESS + body.spacer_h,
+                count=body.stack_count - 1,
+            )
+        except Exception:
+            logger.exception("Separator STEP export failed")
 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(f"{basename}.3mf", threemf)
         zf.writestr(f"{basename}.stl", pla_stl)
         zf.writestr(f"{basename}-spacers.stl", petg_stl)
+        if step is not None:
+            zf.writestr(f"{basename}-spacers.step", step)
 
     return response.raw(
         buf.getvalue(),

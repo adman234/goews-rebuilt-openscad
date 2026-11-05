@@ -30,8 +30,9 @@ include <parsers.scad>
 // "hex" or "grid"
 tile_kind = "hex"; // [hex, grid]
 
-// "pla", "petg", or "all" for preview
-part = "all"; // [all, pla, petg]
+// "pla", "petg", or "all" for preview.
+// "petg_outline" exports the 2D outline of one separator (used for STEP export).
+part = "all"; // [all, pla, petg, petg_outline]
 
 stack_count = 3;
 
@@ -439,18 +440,22 @@ module tab_support_2d() {
   }
 }
 
+module separator_outline_2d() {
+  difference() {
+    union() {
+      separator_footprint_2d();
+
+      if (enable_pull_tabs)
+        tab_2d();
+    }
+
+    separator_hole_relief_2d();
+  }
+}
+
 module separator_sheet() {
   linear_extrude(height=spacer_h)
-    difference() {
-      union() {
-        separator_footprint_2d();
-
-        if (enable_pull_tabs)
-          tab_2d();
-      }
-
-      separator_hole_relief_2d();
-    }
+    separator_outline_2d();
 }
 
 module pla_tiles() {
@@ -488,6 +493,8 @@ if (part == "pla") {
   pla_part();
 } else if (part == "petg") {
   petg_part();
+} else if (part == "petg_outline") {
+  separator_outline_2d();
 } else {
   color("lightgray") pla_part();
   color("orange") petg_part();

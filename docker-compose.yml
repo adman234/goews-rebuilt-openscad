@@ -1,0 +1,12 @@
+services:
+  goews:
+    build:
+      context: .
+      args:
+        # Set to "false" for a smaller image without STEP export.
+        WITH_STEP: "true"
+    image: goews-generator:local
+    ports:
+      # Change the left side to use a different port on your machine.
+      - "8000:8000"
+    restart: unless-stopped

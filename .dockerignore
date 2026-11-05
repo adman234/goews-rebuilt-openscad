@@ -1,0 +1,11 @@
+.git
+build
+venv
+**/__pycache__
+frontend/node_modules
+frontend/dist
+tests
+systemd
+*.stl
+*.3mf
+*.step

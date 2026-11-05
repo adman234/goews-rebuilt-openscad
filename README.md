@@ -132,6 +132,36 @@ To build for production:
 make server
 ```
 
+### Running it in Docker
+
+The easiest way to host the generator yourself is with Docker. The image includes
+the OpenSCAD nightly (with the fast Manifold backend), BOSL2, the built frontend
+and the server:
+
+```bash
+docker compose up -d --build
+```
+
+Then open http://localhost:8000/. To use a different port, change the left side of
+`ports` in `docker-compose.yml` (for example `"8080:8000"`).
+
+The tile stack's **Download ZIP** contains:
+
+- a 3MF with the PLA tiles and PETG separators as one object, with the filaments
+  already assigned (PLA = filament 1, PETG = filament 2)
+- STLs of the tiles and of the separators
+- a STEP file of the separators, if **Include Step** is ticked (this adds a minute
+  or so for large stacks)
+
+STEP export uses OpenCascade, which adds about 300 MB to the image. To leave it
+out, set `WITH_STEP: "false"` in `docker-compose.yml` and rebuild.
+
+To update after pulling new changes:
+
+```bash
+docker compose up -d --build
+```
+
 There is Systemd unit definition in `systemd/goews.service`. It assumes the location of
 this repo is checked out at `/srv/goews-rebuilt-openscad` and a user `goews` exists.
 For security reasons, it is highly recommended that nothing under the checkout is

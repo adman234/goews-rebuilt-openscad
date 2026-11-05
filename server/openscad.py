@@ -26,7 +26,7 @@ def openscad_failure(stderr: bytes, action: str) -> OpenSCADError:
 process_semaphore = asyncio.Semaphore(32)
 
 @alru_cache(maxsize=1024)
-async def build(model_file: str, **params) -> bytes:
+async def build(model_file: str, export_format: str = "stl", **params) -> bytes:
     if not params:
         raise OpenSCADError("No parameters given")
 
@@ -38,7 +38,7 @@ async def build(model_file: str, **params) -> bytes:
         "-o",
         "-",
         "--export-format",
-        "stl",
+        export_format,
     ]
     for name, value in params.items():
         if value is not None:
